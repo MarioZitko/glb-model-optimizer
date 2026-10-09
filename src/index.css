@@ -1,0 +1,55 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'Cascadia Mono', Consolas, monospace;
+  --color-bg: #0b0d12;
+  --color-panel: #12151c;
+  --color-panel-2: #181c25;
+  --color-line: #252a36;
+  --color-fg: #e6e8ee;
+  --color-muted: #8a91a3;
+  --color-accent: #f97316;
+  --color-accent-2: #fb923c;
+  --color-ok: #34d399;
+  --color-warn: #fbbf24;
+  --color-err: #f87171;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  user-select: none;
+  overflow: hidden;
+}
+
+input,
+select,
+textarea {
+  user-select: text;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a3040;
+  border-radius: 5px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+input[type='range'] {
+  accent-color: var(--color-accent);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}

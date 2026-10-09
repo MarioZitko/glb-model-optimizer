@@ -1,0 +1,14 @@
+node_modules/
+dist/
+dist-electron/
+release/
+test-fixtures/
+
+# Logs and OS/editor clutter
+*.log
+*.tmp
+Thumbs.db
+Desktop.ini
+.DS_Store
+.vscode/
+.idea/

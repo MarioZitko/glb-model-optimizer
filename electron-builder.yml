@@ -1,0 +1,50 @@
+appId: com.mariozitkovic.modeloptimizer
+productName: Model Optimizer
+copyright: Copyright © 2026 Mario Zitkovic
+
+directories:
+  output: release
+  buildResources: build
+
+# Renderer + Electron code are fully bundled; only `sharp` is needed from node_modules at runtime.
+files:
+  - dist/**
+  - dist-electron/**
+  - package.json
+  - "!dist-electron/engine.cjs"
+
+# sharp ships native libvips binaries, which must live outside the asar archive.
+asarUnpack:
+  - node_modules/sharp/**
+  - node_modules/@img/**
+
+npmRebuild: false
+
+# Smaller downloads: ship only the English Chromium locale (saves ~48 MB unpacked) and compress harder.
+electronLanguages: [en-US]
+compression: maximum
+publish: null
+
+win:
+  target:
+    - target: portable
+      arch: [x64]
+    - target: nsis
+      arch: [x64]
+    - target: zip
+      arch: [x64]
+  icon: build/icon.png
+  # Used by the zip target; portable and nsis set their own names below.
+  artifactName: ModelOptimizer-${version}-win-${arch}.${ext}
+  signAndEditExecutable: true
+
+portable:
+  artifactName: ModelOptimizer-${version}-portable.exe
+
+nsis:
+  artifactName: ModelOptimizer-${version}-setup.exe
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+
