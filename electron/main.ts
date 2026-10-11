@@ -7,7 +7,11 @@ import type { AnalyzeResult, AppSettings, OptimizeRequest, OptimizeResult } from
 const DEV_URL = process.env.VITE_DEV_SERVER_URL;
 // Lets automated tests use a throwaway settings folder.
 if (process.env.MODEL_OPTIMIZER_USER_DATA) app.setPath('userData', process.env.MODEL_OPTIMIZER_USER_DATA);
-const TEMP_DIR = path.join(app.getPath('temp'), `model-optimizer-${process.pid}`);
+// RTX 50-series (Blackwell) + Chromium DirectComposition can flicker/black out the WebGL preview.
+// shortcut: unverified on the friend's PC; MODEL_OPTIMIZER_ANGLE=d3d11|gl|d3d9 swaps the backend to test.
+app.commandLine.appendSwitch('disable-direct-composition');
+if (process.env.MODEL_OPTIMIZER_ANGLE) app.commandLine.appendSwitch('use-angle', process.env.MODEL_OPTIMIZER_ANGLE);
+const TEMP_DIR =path.join(app.getPath('temp'), `model-optimizer-${process.pid}`);
 const SETTINGS_FILE = path.join(app.getPath('userData'), 'settings.json');
 
 let win: BrowserWindow | null = null;
