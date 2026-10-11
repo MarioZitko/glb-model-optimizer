@@ -1,7 +1,7 @@
 {
   "name": "model-optimizer",
   "productName": "Model Optimizer",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Optimize TRELLIS-generated GLB models for Unity.",
   "author": "Mario Zitkovic",
   "license": "UNLICENSED",
