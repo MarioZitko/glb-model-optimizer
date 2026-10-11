@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { AnalyzeResult, AppSettings, MeshSettings, OptimizeResult, PresetId, TextureSettings, ViewerPrefs } from './types/model';
 import { DEFAULT_SETTINGS, PRESETS } from './presets';
 import { dirname, fmtSeconds, joinPath, stem } from './format';
@@ -85,6 +85,7 @@ export default function App() {
   const stale = !!result && resultSettings !== JSON.stringify(cfg.settings);
 
   async function loadModel(p: string) {
+    if (running) return;
     setSourceLoading(true);
     setSourceError(null);
     setRunError(null);
@@ -107,6 +108,27 @@ export default function App() {
     }
     setSourceLoading(false);
   }
+
+  function clearModel() {
+    setSource(null);
+    setSourceBytes(null);
+    setSourceError(null);
+    setRunError(null);
+    setRunNotice(null);
+    setResult(null);
+    setResultBytes(null);
+    setOutputName('');
+  }
+
+  // Files opened from Explorer ("Open with") arrive here, at startup or while already running.
+  const loadRef = useRef(loadModel);
+  loadRef.current = loadModel;
+  useEffect(() => {
+    window.api.takePendingFile().then((p) => {
+      if (p) loadRef.current(p);
+    });
+    return window.api.onOpenFile((p) => loadRef.current(p));
+  }, []);
 
   async function optimize() {
     if (!source || !outputPath) return;
@@ -164,7 +186,7 @@ export default function App() {
         <aside className="flex w-[360px] shrink-0 flex-col border-r border-line bg-panel">
           <div className="min-h-0 flex-1 overflow-y-auto">
             <Section title="Source model">
-              <ModelDropzone source={source} loading={sourceLoading} disabled={running} onSelect={loadModel} />
+              <ModelDropzone source={source} loading={sourceLoading} disabled={running} onSelect={loadModel} onRemove={clearModel} />
               {sourceError && (
                 <div className="mt-2">
                   <Notice kind="err">{sourceError}</Notice>

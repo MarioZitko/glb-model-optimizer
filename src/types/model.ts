@@ -95,6 +95,8 @@ export interface ModelOptimizerApi {
   chooseFolder(defaultPath?: string | null): Promise<string | null>;
   getPathForFile(file: File): string;
   analyzeModel(path: string): Promise<AnalyzeResponse>;
+  takePendingFile(): Promise<string | null>;
+  onOpenFile(cb: (path: string) => void): () => void;
   readModel(path: string): Promise<ArrayBuffer>;
   optimize(req: OptimizeRequest): Promise<OptimizeResponse>;
   cancelOptimize(): Promise<void>;

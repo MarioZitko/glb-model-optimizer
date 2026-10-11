@@ -25,6 +25,14 @@ electronLanguages: [en-US]
 compression: maximum
 publish: null
 
+fileAssociations:
+  - ext: glb
+    name: GLB 3D model
+    role: Editor
+  - ext: gltf
+    name: glTF 3D model
+    role: Editor
+
 win:
   target:
     - target: portable

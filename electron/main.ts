@@ -14,6 +14,11 @@ if (process.env.MODEL_OPTIMIZER_ANGLE) app.commandLine.appendSwitch('use-angle',
 const TEMP_DIR =path.join(app.getPath('temp'), `model-optimizer-${process.pid}`);
 const SETTINGS_FILE = path.join(app.getPath('userData'), 'settings.json');
 
+const gotLock = app.requestSingleInstanceLock();
+/** A .glb/.gltf path passed on the command line ("Open with" / double-click). */
+const modelArg = (argv: string[]) => argv.slice(1).find((a) => /.(glb|gltf)$/i.test(a) && fs.existsSync(a)) ?? null;
+let pendingFile = modelArg(process.argv);
+
 let win: BrowserWindow | null = null;
 let optimizeWorker: UtilityProcess | null = null;
 let cancelRequested = false;
@@ -94,6 +99,12 @@ function registerIpc() {
     }
   });
 
+  ipcMain.handle('app:takePendingFile', () => {
+    const f = pendingFile;
+    pendingFile = null;
+    return f;
+  });
+
   ipcMain.handle('model:read', async (_e, filePath: string) => {
     if (!readableFiles.has(path.resolve(filePath))) throw new Error('Access denied');
     const buf = await fsp.readFile(filePath);
@@ -157,7 +168,18 @@ function registerIpc() {
   });
 }
 
+app.on('second-instance', (_e, argv) => {
+  if (!win) return;
+  if (win.isMinimized()) win.restore();
+  win.focus();
+  const f = modelArg(argv);
+  if (f) win.webContents.send('model:open', f);
+});
+
+if (!gotLock) app.quit();
+
 app.whenReady().then(() => {
+  if (!gotLock) return;
   Menu.setApplicationMenu(null);
   registerIpc();
   createWindow();

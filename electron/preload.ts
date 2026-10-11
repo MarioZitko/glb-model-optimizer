@@ -6,6 +6,12 @@ const api: ModelOptimizerApi = {
   chooseFolder: (defaultPath) => ipcRenderer.invoke('dialog:chooseFolder', defaultPath),
   getPathForFile: (file) => webUtils.getPathForFile(file),
   analyzeModel: (path) => ipcRenderer.invoke('model:analyze', path),
+  takePendingFile: () => ipcRenderer.invoke('app:takePendingFile'),
+  onOpenFile: (cb) => {
+    const listener = (_: unknown, path: string) => cb(path);
+    ipcRenderer.on('model:open', listener);
+    return () => ipcRenderer.removeListener('model:open', listener);
+  },
   readModel: (path) => ipcRenderer.invoke('model:read', path),
   optimize: (req) => ipcRenderer.invoke('model:optimize', req),
   cancelOptimize: () => ipcRenderer.invoke('model:cancel'),

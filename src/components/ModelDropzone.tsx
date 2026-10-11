@@ -8,9 +8,10 @@ interface Props {
   loading: boolean;
   disabled: boolean;
   onSelect: (path: string) => void;
+  onRemove: () => void;
 }
 
-export default function ModelDropzone({ source, loading, disabled, onSelect }: Props) {
+export default function ModelDropzone({ source, loading, disabled, onSelect, onRemove }: Props) {
   const [over, setOver] = useState(false);
   const [dropError, setDropError] = useState<string | null>(null);
 
@@ -72,6 +73,15 @@ export default function ModelDropzone({ source, loading, disabled, onSelect }: P
               {source.fileName}
             </div>
             <div className="tabular ml-auto shrink-0 text-muted">{fmtBytes(source.stats.fileSize)}</div>
+            <button
+              type="button"
+              onClick={onRemove}
+              disabled={disabled}
+              title="Remove model"
+              className="shrink-0 rounded px-1.5 text-[15px] leading-none text-muted hover:bg-panel hover:text-err disabled:opacity-40"
+            >
+              ×
+            </button>
           </div>
           <div className="mt-0.5 truncate text-[11.5px] text-muted" title={source.path}>
             {dirname(source.path)}

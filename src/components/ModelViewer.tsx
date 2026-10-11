@@ -37,7 +37,21 @@ const BACKGROUNDS: Record<ViewerPrefs['background'], string> = { dark: '#15181f'
 const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
 
 function parseGlb(bytes: ArrayBuffer): Promise<THREE.Group> {
-  return new Promise((resolve, reject) => loader.parse(bytes, '', (gltf) => resolve(gltf.scene), reject));
+  return new Promise((resolve, reject) =>
+    loader.parse(
+      bytes,
+      '',
+      (gltf) => {
+        // Sharper textures at grazing angles; avoids shimmering while orbiting.
+        gltf.scene.traverse((o) => {
+          const m = (o as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined;
+          if (m?.map) m.map.anisotropy = 8;
+        });
+        resolve(gltf.scene);
+      },
+      reject,
+    ),
+  );
 }
 
 function disposeScene(root: THREE.Object3D) {
@@ -53,17 +67,18 @@ function disposeScene(root: THREE.Object3D) {
 }
 
 function Environment() {
-  const { gl, scene } = useThree();
+  const { gl, scene, invalidate } = useThree();
   useEffect(() => {
     const pmrem = new THREE.PMREMGenerator(gl);
     const env = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
     scene.environment = env;
+    invalidate(); // frameloop is on-demand
     return () => {
       scene.environment = null;
       env.dispose();
       pmrem.dispose();
     };
-  }, [gl, scene]);
+  }, [gl, scene, invalidate]);
   return null;
 }
 
@@ -78,6 +93,7 @@ function Stage(props: {
 }) {
   const { model, wireframe, grid, resetKey, id, sync } = props;
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera;
+  const invalidate = useThree((s) => s.invalidate);
   const controls = useRef<OrbitControlsImpl>(null);
   const applying = useRef(false);
 
@@ -98,7 +114,8 @@ function Stage(props: {
       if (!mesh.isMesh) return;
       for (const m of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) (m as THREE.MeshStandardMaterial).wireframe = wireframe;
     });
-  }, [model, wireframe]);
+    invalidate();
+  }, [model, wireframe, invalidate]);
 
   // Frame on load and on reset.
   useEffect(() => {
@@ -109,7 +126,8 @@ function Stage(props: {
     camera.updateProjectionMatrix();
     controls.current?.target.set(0, 0, 0);
     controls.current?.update();
-  }, [camera, radius, resetKey]);
+    invalidate();
+  }, [camera, radius, resetKey, invalidate]);
 
   useEffect(() => {
     if (!sync) return;
@@ -221,8 +239,9 @@ export default function ModelViewer({ id, title, bytes, triangles, emptyText, bu
         {model && (
           <Canvas
             camera={{ fov: 40 }}
-            dpr={[1, 2]}
-            gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, outputColorSpace: THREE.SRGBColorSpace }}
+            dpr={[1, 1.5]}
+            frameloop="demand"
+            gl={{ antialias: true, powerPreference: 'high-performance', toneMapping: THREE.ACESFilmicToneMapping, outputColorSpace: THREE.SRGBColorSpace }}
           >
             <color attach="background" args={[BACKGROUNDS[prefs.background]]} />
             <Environment />
